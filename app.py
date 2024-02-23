@@ -19,15 +19,17 @@ with open('jiraInfo.json') as jiraInfoFile:
 server = jiraInfo['server']
 project_name = jiraInfo['project_name']
 
+st.markdown('# Blocked items without any blockers')
 
 ### handling jira calls to start only once initiated. Might remove later
-if "refresh" not in st.session_state:
-    st.session_state["refresh"] = "off"
+# if "refresh" not in st.session_state:
+#     st.session_state["refresh"] = "off"
 
-def changeRefreshState():
-    st.session_state["refresh"] = "on"
+# def changeRefreshState():
+#     st.session_state["refresh"] = "on"
 
-st.button("Start JIRA", on_click=changeRefreshState)
+# st.button("Start JIRA", on_click=changeRefreshState)
+st.session_state["refresh"] = "on"
 
 ### adding board selection
 boardOprions= []
@@ -72,9 +74,16 @@ if st.session_state["refresh"] == "on":
                     # print(f'Blocked By: {bi.inwardIssue.key}, {bi.inwardIssue.fields.status}')
         
         if len(activeBlockers) == 0:
-            # theIssues.append(f'{item.key} | No Active Blockers {item.permalink()}')
-            # theIssues.append(f'{item.key}, {item.fields.reporter} | No Active Blockers {item.permalink()} {item.fields.summary}, <{item.fields.issuetype}>') #w reporter & subject
-            theIssues.append(f"<a href='{item.permalink()}'>{item.key}</a> {item.fields.summary} | No Active Blockers | Reporter: {item.fields.reporter}, Type: {item.fields.issuetype}")
+            if str(item.fields.issuetype) == 'Story':
+                emoji = '📖'
+            elif str(item.fields.issuetype) == 'Bug':
+                emoji = '🐞'
+            elif str(item.fields.issuetype) == 'Spike':
+                emoji = '🌵'
+            else:
+                emoji = ''
+            
+            theIssues.append(f"<a href='{item.permalink()}'>{item.key}</a> {item.fields.summary} | No Active Blockers | Reporter: {item.fields.reporter}, Type: {item.fields.issuetype} {emoji}")
         else:
             pass
             # activeBlockersList = ',  '.join(activeBlockers)
