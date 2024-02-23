@@ -19,7 +19,15 @@ with open('jiraInfo.json') as jiraInfoFile:
 server = jiraInfo['server']
 project_name = jiraInfo['project_name']
 
-st.markdown('# Blocked items without any blockers')
+
+# Set the page config
+st.set_page_config(
+  page_title="Blocked items",
+  page_icon="⛔",
+#   layout="wide"
+)
+
+st.title('Blocked items without any blockers')
 
 ### handling jira calls to start only once initiated. Might remove later
 # if "refresh" not in st.session_state:
