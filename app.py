@@ -47,7 +47,7 @@ for boards in jiraInfo['boards']:
         boardOprions.append(board)
 
 # Create the selectbox
-boardSelected = st.selectbox('Select board', boardOprions)
+boardSelected = st.selectbox('Select team', boardOprions)
 
 if st.session_state["refresh"] == "on":
     jira = JIRA(basic_auth=(email, apiToken), options={'server': server})
@@ -70,9 +70,14 @@ if st.session_state["refresh"] == "on":
         linkedIssues.extend(issues)
 
     theIssues = []
+    parents = []
 
     for item in linkedIssues:
         blockedIssues = [link for link in item.fields.issuelinks if link.type.name == 'Blocks']
+        try:
+            parents.append(str(item.fields.parent))
+        except AttributeError:
+            pass
 
         activeBlockers = []
         for bi in blockedIssues:
@@ -96,6 +101,11 @@ if st.session_state["refresh"] == "on":
             pass
             # activeBlockersList = ',  '.join(activeBlockers)
             # theIssues.append(f"<a href='{item.permalink()}'>{item.key}</a> | Active Blockers: {activeBlockersList} {item.permalink()}")
+    
+    parents = list(set(parents))
+
+    if len(parents) >= 0:
+        selectedParents = st.multiselect('Choose Parents to exclude:', parents)
 
     # theIssues
 
