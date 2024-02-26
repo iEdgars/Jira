@@ -23,7 +23,7 @@ project_name = jiraInfo['project_name']
 # Set the page config
 st.set_page_config(
   page_title="Blocked items",
-  page_icon="⛔",
+  page_icon="🚫",
 #   layout="wide"
 )
 
