@@ -90,7 +90,7 @@ jira = JIRA(basic_auth=(email, apiToken), options={'server': server})
 
 st.title('Blocked items without any blockers')
 
-selectedComponent = st.selectbox('Select team', [board for boards in jiraInfo['boards'] for board in boards])
+selectedComponent = st.selectbox('Select team', [board for boards in jiraInfo['boards'] for board in boards], help='Select jira Component to determine team')
 
 blockedJira = blockedStories(jira, projectName, selectedComponent, server)
 
@@ -98,12 +98,20 @@ blockedJira = blockedStories(jira, projectName, selectedComponent, server)
 # Get unique Epics from the DataFrame
 uniqueEpics = blockedJira['Epic'].unique().tolist()
 
+#Adding possibility to remove Epics
+excludedEpics = st.multiselect('Remove Epics', uniqueEpics, help='Select Epics to remove' )
+
+excludedEpicsDf = blockedJira if not excludedEpics else blockedJira[~blockedJira['Epic'].isin(excludedEpics)]
+
+#Adding possibility to Select Epics
+uniqueEpics = [epic for epic in uniqueEpics if epic not in excludedEpics]
+
 # Create a multiselect widget for Epics
-selectedEpics = st.multiselect('Select Epics', uniqueEpics)
+selectedEpics = st.multiselect('Select Epics', uniqueEpics, help='Select Epics to display' )
 
 
 # Filter the DataFrame based on selected Epics, or show all if none are selected
-filtered_df = blockedJira if not selectedEpics else blockedJira[blockedJira['Epic'].isin(selectedEpics)]
+filtered_df = excludedEpicsDf if not selectedEpics else excludedEpicsDf[excludedEpicsDf['Epic'].isin(selectedEpics)]
 
 # Display the filtered DataFrame
 # st.dataframe(filtered_df)
