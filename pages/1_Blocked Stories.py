@@ -93,8 +93,8 @@ jira = JIRA(basic_auth=(email, apiToken), options={'server': server})
 # Set the page config
 st.set_page_config(
   page_title="Blocked items",
-  page_icon="🚫",
-  layout="wide"
+  page_icon="✖",
+#   layout="wide"
 )
 
 st.title('Blocked items without any blockers')
