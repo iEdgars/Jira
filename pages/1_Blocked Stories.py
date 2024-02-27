@@ -88,6 +88,15 @@ projectName = jiraInfo['project_name']
 
 jira = JIRA(basic_auth=(email, apiToken), options={'server': server})
 
+#### Start for StreamLit ####
+
+# Set the page config
+st.set_page_config(
+  page_title="Blocked items",
+  page_icon="🚫",
+  layout="wide"
+)
+
 st.title('Blocked items without any blockers')
 
 selectedComponent = st.selectbox('Select team', [board for boards in jiraInfo['boards'] for board in boards], help='Select jira Component to determine team')
