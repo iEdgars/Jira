@@ -1,62 +1,29 @@
 import streamlit as st
 from jira import JIRA
 import pandas as pd
-import requests
 import json
 
-### adding credentials
-with open('jiraCreds.json') as jiraCredsFile:
-    jiraCreds = json.load(jiraCredsFile)
+def typeEmoji(type):
+    if str(type) == 'Story':
+        emoji = '📖'
+    elif str(type) == 'Bug':
+        emoji = '🐞'
+    elif str(type) == 'Spike':
+        emoji = '🌵'
+    else:
+        emoji = ''
 
-email = jiraCreds['email']
-apiToken = jiraCreds['apiToken']
-encodedToken = jiraCreds['encodedToken']
+    return emoji
 
-### adding Jira info
-with open('jiraInfo.json') as jiraInfoFile:
-    jiraInfo = json.load(jiraInfoFile)
+def blockedStories(jiraConnection, project, component, server):
+    columns = ['Item number', 'Link', 'Subject', 'Reporter', 'Type', 'TypeEmoji', 'Epic', 'Epic link']
+    df = pd.DataFrame(columns=columns)
 
-server = jiraInfo['server']
-project_name = jiraInfo['project_name']
-
-
-# Set the page config
-st.set_page_config(
-  page_title="Blocked items",
-  page_icon="🚫",
-#   layout="wide"
-)
-
-st.title('Blocked items without any blockers')
-
-### handling jira calls to start only once initiated. Might remove later
-# if "refresh" not in st.session_state:
-#     st.session_state["refresh"] = "off"
-
-# def changeRefreshState():
-#     st.session_state["refresh"] = "on"
-
-# st.button("Start JIRA", on_click=changeRefreshState)
-st.session_state["refresh"] = "on"
-
-### adding board selection
-boardOprions= []
-
-for boards in jiraInfo['boards']:
-    for board in boards:
-        boardOprions.append(board)
-
-# Create the selectbox
-boardSelected = st.selectbox('Select team', boardOprions)
-
-if st.session_state["refresh"] == "on":
-    jira = JIRA(basic_auth=(email, apiToken), options={'server': server})
     status = 'Blocked'
-
     blockingStatuses = ['Ready','Blocked','Backlog','In Progress','UAT', 'In Testing', 'Ready for Refinement']
     nonBlockingStatuses = ['Done','Rejected']
 
-    query = f'project = {project_name} AND component = {boardSelected} AND status = {status}'
+    query = f'project = {project} AND component = {component} AND status = {status}'
 
     startAt = 0
     issues = jira.search_issues(query, startAt=startAt, maxResults=50)
@@ -74,10 +41,6 @@ if st.session_state["refresh"] == "on":
 
     for item in linkedIssues:
         blockedIssues = [link for link in item.fields.issuelinks if link.type.name == 'Blocks']
-        try:
-            parents.append(str(item.fields.parent))
-        except AttributeError:
-            pass
 
         activeBlockers = []
         for bi in blockedIssues:
@@ -86,31 +49,68 @@ if st.session_state["refresh"] == "on":
                     activeBlockers.append(f'{bi.inwardIssue.key} [{bi.inwardIssue.fields.status}]')
                     # print(f'Blocked By: {bi.inwardIssue.key}, {bi.inwardIssue.fields.status}')
         
+        try:
+            parentEpic = item.fields.parent
+            epicLink = f'{server}/browse/{str(item.fields.parent)}'
+        except:
+            parentEpic = 'No Parent'
+            epicLink = ''
+
+        emoji = typeEmoji(item.fields.issuetype)
+
         if len(activeBlockers) == 0:
-            if str(item.fields.issuetype) == 'Story':
-                emoji = '📖'
-            elif str(item.fields.issuetype) == 'Bug':
-                emoji = '🐞'
-            elif str(item.fields.issuetype) == 'Spike':
-                emoji = '🌵'
-            else:
-                emoji = ''
-            
-            theIssues.append(f"<a href='{item.permalink()}'>{item.key}</a> {item.fields.summary} | No Active Blockers | Reporter: {item.fields.reporter}, Type: {item.fields.issuetype} {emoji}")
+
+            ticket = [item.key, item.permalink(), item.fields.summary, item.fields.reporter, item.fields.issuetype, emoji, parentEpic, epicLink]
+            df.loc[len(df)] = ticket
+        
         else:
             pass
-            # activeBlockersList = ',  '.join(activeBlockers)
-            # theIssues.append(f"<a href='{item.permalink()}'>{item.key}</a> | Active Blockers: {activeBlockersList} {item.permalink()}")
     
-    parents = list(set(parents))
+    df = df.drop_duplicates()    
 
-    if len(parents) >= 0:
-        selectedParents = st.multiselect('Choose Parents to exclude:', parents)
+    return df
 
-    # theIssues
 
-    for i in theIssues:
-        if 'No Active Blockers' in i:
-            st.write(i, unsafe_allow_html=True)
-    
+### adding credentials
+with open('jiraCreds.json') as jiraCredsFile:
+    jiraCreds = json.load(jiraCredsFile)
 
+email = jiraCreds['email']
+apiToken = jiraCreds['apiToken']
+encodedToken = jiraCreds['encodedToken']
+
+### adding Jira info
+with open('jiraInfo.json') as jiraInfoFile:
+    jiraInfo = json.load(jiraInfoFile)
+
+server = jiraInfo['server']
+projectName = jiraInfo['project_name']
+
+jira = JIRA(basic_auth=(email, apiToken), options={'server': server})
+
+st.title('Blocked items without any blockers')
+
+selectedComponent = st.selectbox('Select team', [board for boards in jiraInfo['boards'] for board in boards])
+
+blockedJira = blockedStories(jira, projectName, selectedComponent, server)
+
+
+# Get unique Epics from the DataFrame
+uniqueEpics = blockedJira['Epic'].unique().tolist()
+
+# Create a multiselect widget for Epics
+selectedEpics = st.multiselect('Select Epics', uniqueEpics)
+
+
+# Filter the DataFrame based on selected Epics, or show all if none are selected
+filtered_df = blockedJira if not selectedEpics else blockedJira[blockedJira['Epic'].isin(selectedEpics)]
+
+# Display the filtered DataFrame
+# st.dataframe(filtered_df)
+# st.dataframe(da)
+
+for index, row in filtered_df.iterrows():
+    if row['Epic'] == 'No Parent':
+        st.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br> No Active Blockers | Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}", unsafe_allow_html=True)
+    else:
+        st.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br> No Active Blockers | Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}, Epic: <a href='{row['Epic link']}'>{row['Epic']}</a>", unsafe_allow_html=True)
