@@ -104,28 +104,23 @@ selectedComponent = st.selectbox('Select team', [board for boards in jiraInfo['b
 
 blockedJira = blockedStories(jira, projectName, selectedComponent, server)
 
+col1, col2 = st.columns(2)
 
 # Get unique Epics from the DataFrame
 uniqueEpics = blockedJira['Epic'].unique().tolist()
 
 #Adding possibility to remove Epics
-excludedEpics = st.multiselect('Remove Epics', uniqueEpics, help='Select Epics to remove' )
-
+excludedEpics = col1.multiselect('Remove Epics', uniqueEpics, help='Select Epics to remove' )
 excludedEpicsDf = blockedJira if not excludedEpics else blockedJira[~blockedJira['Epic'].isin(excludedEpics)]
 
 #Adding possibility to Select Epics
 uniqueEpics = [epic for epic in uniqueEpics if epic not in excludedEpics]
 
 # Create a multiselect widget for Epics
-selectedEpics = st.multiselect('Select Epics', uniqueEpics, help='Select Epics to display' )
-
+selectedEpics = col2.multiselect('Select Epics', uniqueEpics, help='Select Epics to display' )
 
 # Filter the DataFrame based on selected Epics, or show all if none are selected
 filtered_df = excludedEpicsDf if not selectedEpics else excludedEpicsDf[excludedEpicsDf['Epic'].isin(selectedEpics)]
-
-# Display the filtered DataFrame
-# st.dataframe(filtered_df)
-# st.dataframe(da)
 
 for index, row in filtered_df.iterrows():
     if row['Epic'] == 'No Parent':
