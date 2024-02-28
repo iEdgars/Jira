@@ -15,7 +15,8 @@ def typeEmoji(type):
 
     return emoji
 
-def blockedStories(jiraConnection, project, component, server):
+@st.cache_data(ttl=900)
+def blockedStories(_jiraConnection, project, component, server):
     columns = ['Item number', 'Link', 'Subject', 'Reporter', 'Type', 'TypeEmoji', 'Epic', 'Epic link']
     df = pd.DataFrame(columns=columns)
 
@@ -26,7 +27,7 @@ def blockedStories(jiraConnection, project, component, server):
     query = f'project = {project} AND component = {component} AND status = {status}'
 
     startAt = 0
-    issues = jira.search_issues(query, startAt=startAt, maxResults=50)
+    issues = _jiraConnection.search_issues(query, startAt=startAt, maxResults=50)
     linkedIssues = issues
 
     while len(issues) > 0:
