@@ -19,7 +19,7 @@ def typeEmoji(type):
 
 @st.cache_data(ttl=900)
 def blockedStories(_jiraConnection, project, component, server):
-    columns = ['Item number', 'Link', 'Subject', 'Reporter', 'Type', 'TypeEmoji', 'Epic', 'Epic link']
+    columns = ['Item number', 'Link', 'Subject', 'Assignee', 'Reporter', 'Type', 'TypeEmoji', 'Epic', 'Epic link']
     df = pd.DataFrame(columns=columns)
 
     status = 'Blocked'
@@ -63,7 +63,7 @@ def blockedStories(_jiraConnection, project, component, server):
 
         if len(activeBlockers) == 0:
 
-            ticket = [item.key, item.permalink(), item.fields.summary, item.fields.reporter, item.fields.issuetype, emoji, parentEpic, epicLink]
+            ticket = [item.key, item.permalink(), item.fields.summary, item.fields.assignee, item.fields.reporter, item.fields.issuetype, emoji, parentEpic, epicLink]
             df.loc[len(df)] = ticket
         
         else:
@@ -126,9 +126,9 @@ filtered_df = excludedEpicsDf if not selectedEpics else excludedEpicsDf[excluded
 
 for index, row in filtered_df.iterrows():
     if row['Epic'] == 'No Parent':
-        st.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}", unsafe_allow_html=True)
+        st.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}", unsafe_allow_html=True)
     else:
-        st.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}, Epic: <a href='{row['Epic link']}'>{row['Epic']}</a>", unsafe_allow_html=True)
+        st.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}, Epic: <a href='{row['Epic link']}'>{row['Epic']}</a>", unsafe_allow_html=True)
 
 if st.button('Refresh ALL Jira items', help='Clears all Cached data for all pages'):
     st.cache_data.clear()
