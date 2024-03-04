@@ -18,11 +18,11 @@ def typeEmoji(type):
     return emoji
 
 @st.cache_data(ttl=900)
-def blockedStories(_jiraConnection, project, component, server):
+def storiesToBlock(_jiraConnection, project, component, server):
     columns = ['Item number', 'Link', 'Subject', 'Reporter', 'Type', 'TypeEmoji', 'Epic', 'Epic link']
     df = pd.DataFrame(columns=columns)
 
-    status = 'Blocked'
+    status = 'Ready'
     blockingStatuses = ['Ready','Blocked','Backlog','In Progress','UAT', 'In Testing', 'Ready for Refinement']
     nonBlockingStatuses = ['Done','Rejected']
 
@@ -61,7 +61,7 @@ def blockedStories(_jiraConnection, project, component, server):
 
         emoji = typeEmoji(item.fields.issuetype)
 
-        if len(activeBlockers) == 0:
+        if len(activeBlockers) != 0:
 
             ticket = [item.key, item.permalink(), item.fields.summary, item.fields.reporter, item.fields.issuetype, emoji, parentEpic, epicLink]
             df.loc[len(df)] = ticket
@@ -95,25 +95,25 @@ jira = JIRA(basic_auth=(email, apiToken), options={'server': server})
 
 # Set the page config
 st.set_page_config(
-  page_title="Blocked items",
-  page_icon="🚧",
+  page_title="Items to block",
+  page_icon="🔒",
 #   layout="wide"
 )
 
-st.title('Blocked items without active blockers', help="Stories with **Blocked** status that has no active **blocked by** links")
+st.title('Jira items in Ready state that has active blockers', help="Stories with **Ready** status that has active **blocked by** links")
 
-selectedComponent = st.selectbox('Select team', [board for boards in jiraInfo['boards'] for board in boards], help='Select jira Component to determine team')
+selectedComponent = st.selectbox('Select team', [board for boards in jiraInfo['boards'] for board in boards], help='Select Jira Component to determine team')
 
-blockedJira = blockedStories(jira, projectName, selectedComponent, server)
+jiraToBlock = storiesToBlock(jira, projectName, selectedComponent, server)
 
 col1, col2 = st.columns(2)
 
 # Get unique Epics from the DataFrame
-uniqueEpics = blockedJira['Epic'].unique().tolist()
+uniqueEpics = jiraToBlock['Epic'].unique().tolist()
 
 #Adding possibility to remove Epics
 excludedEpics = col1.multiselect('Remove Epics', uniqueEpics, help='Select Epics to remove' )
-excludedEpicsDf = blockedJira if not excludedEpics else blockedJira[~blockedJira['Epic'].isin(excludedEpics)]
+excludedEpicsDf = jiraToBlock if not excludedEpics else jiraToBlock[~jiraToBlock['Epic'].isin(excludedEpics)]
 
 #Adding possibility to Select Epics
 uniqueEpics = [epic for epic in uniqueEpics if epic not in excludedEpics]
