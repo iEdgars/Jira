@@ -77,7 +77,7 @@ st.set_page_config(
 #   layout="wide"
 )
 
-st.title('Jira items in Ready state that has active blockers', help="Stories with **Ready** status that has active **blocked by** links")
+st.title('DE Ready for Refinment items', help="DE Ready for Refinment items with buttons to copy /storyplan ready statement and link to story")
 
 # selectedComponent = st.selectbox('Select team', [board for boards in jiraInfo['boards'] for board in boards], help='Select Jira Component to determine team')
 selectedComponent = "DE"
