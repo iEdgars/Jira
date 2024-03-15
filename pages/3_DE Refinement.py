@@ -18,16 +18,6 @@ def typeEmoji(type):
 
     return emoji
 
-##setting SessionState in order to handle different returns for multiple buttons
-class SessionState(object):
-    def __init__(self, **kwargs):
-        for key, val in kwargs.items():
-            setattr(self, key, val)
-
-def get(**kwargs):
-    if not hasattr(st, '_session_state'):
-        st._session_state = SessionState(**kwargs)
-    return st._session_state
 
 @st.cache_data(ttl=900)
 def readyForRefinementItems(_jiraConnection, project, component, server):
@@ -95,36 +85,18 @@ selectedComponent = "DE"
 
 refinmentItems = readyForRefinementItems(jira, projectName, selectedComponent, server)
 
-# session_state = SessionState.get(button_clicked=False, button_message="")
-
 col1, col2 = st.columns([0.9,0.1])
 
 for index, row in refinmentItems.iterrows():
-    # item_number = row['Item number']
-    # subject = row['Subject']
-    # link = row['Link']
-    # server_link = f"{server}/browse/{item_number}"
-    
     if row['Epic'] == 'No Parent':
         col1.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}<br>", unsafe_allow_html=True)
     else:
         col1.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}, Epic: <a href='{row['Epic link']}'>{row['Epic']}</a><br>", unsafe_allow_html=True)
     
-## buttons not working properly, always clipboarding latest value:
-    # col2.button("📋", on_click=clipboard.copy(f"/storyplan {row['Item number']} {row['Subject']}"), key=row['Item number'])
-    # col2.button("🔗", on_click=clipboard.copy(f"{server}/browse/{row['Item number']}"), key=f"{row['Item number']}_link")
-        
-## buttons working properly, clipboarding value assigned, but bigger in text and requires above assignments right after for statement:
-    # col2.button("📋", on_click=lambda item_number=item_number, subject=subject: clipboard.copy(f"/storyplan {item_number} {subject}"), key=item_number)
-    # col2.button("🔗", on_click=lambda server_link=server_link: clipboard.copy(server_link), key=f"{item_number}_link")
-        
-## buttons working properly, clipboarding value assigned, cleaned up version of above not requiring assignments upfront:
+    # approach with lambda is required for buttons to work properly and clipboard value assigned
     col2.button("📋", on_click=lambda storyPlanValue = f"/storyplan {row['Item number']} {row['Subject']}": clipboard.copy(storyPlanValue), key=row['Item number'])
     col2.button("🔗", on_click=lambda itemLinkValue = f"{server}/browse/{row['Item number']}": clipboard.copy(itemLinkValue), key=f"{row['Item number']}_link")
         
-    
-
-
 if st.button('Refresh ALL Jira items', help='Clears all Cached data for all pages'):
     st.cache_data.clear()
     st.rerun()
