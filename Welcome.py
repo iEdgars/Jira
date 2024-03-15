@@ -23,3 +23,6 @@ col2.markdown("Contains stories with **Ready** status that has active **blocked 
 
 col1.page_link("pages/3_DE Refinement.py", label="DE Refinement", icon="📝")
 col2.markdown("Contains DE Ready for Refinment items")
+
+col1.page_link("pages/4_DA Refinement.py", label="DA Refinement", icon="📝")
+col2.markdown("Contains DA Backlog items for Refinment")
