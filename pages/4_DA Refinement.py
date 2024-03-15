@@ -24,7 +24,7 @@ def readyForRefinementItems(_jiraConnection, project, component, server):
     columns = ['Item number', 'Link', 'Subject', 'Assignee', 'Reporter', 'Type', 'TypeEmoji', 'Epic', 'Epic link']
     df = pd.DataFrame(columns=columns)
 
-    status = 'Ready for Refinement'
+    status = 'Backlog'
     # query = f'project = {project} AND component = {component} AND status = "{status}" AND type in (Bug, Story) ORDER BY cf[10011] ASC'
     query = f'project = {project} AND component = {component} AND status = "{status}" AND type NOT IN (Epic) ORDER BY cf[10011] ASC'
 
@@ -73,7 +73,7 @@ jira = JIRA(basic_auth=(email, apiToken), options={'server': server})
 
 # Set the page config
 st.set_page_config(
-  page_title="Refinement items",
+  page_title="DA Refinement items",
   page_icon="📝",
 #   layout="wide"
 )
@@ -81,11 +81,9 @@ st.set_page_config(
 st.title('DE Ready for Refinment items', help="DE Ready for Refinment items with buttons to copy /storyplan ready statement and link to story")
 
 # selectedComponent = st.selectbox('Select team', [board for boards in jiraInfo['boards'] for board in boards], help='Select Jira Component to determine team')
-selectedComponent = "DE"
+selectedComponent = "DA"
 
 refinmentItems = readyForRefinementItems(jira, projectName, selectedComponent, server)
-
-col1, col2 = st.columns([0.9,0.1])
 
 for index, row in refinmentItems.iterrows():
     with st.container():
