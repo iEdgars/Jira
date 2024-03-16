@@ -84,12 +84,15 @@ st.title('DE Ready for Refinment items', help="DE Ready for Refinment items with
 selectedComponent = "DE"
 
 refinmentItems = readyForRefinementItems(jira, projectName, selectedComponent, server)
-
-col1, col2 = st.columns([0.9,0.1])
+        
+if st.button('Refresh ALL Jira items', help='Clears all Cached data for all pages'):
+    st.cache_data.clear()
+    st.rerun()
 
 for index, row in refinmentItems.iterrows():
     with st.container():
-        col1, col2 = st.columns([0.9,0.1])
+        col1, col2 = st.columns([0.95,0.05])
+        # col1, col2, col3 = st.columns([0.87,0.065,0.065])
         if row['Epic'] == 'No Parent':
             col1.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}<br>", unsafe_allow_html=True)
         else:
@@ -98,7 +101,5 @@ for index, row in refinmentItems.iterrows():
         # approach with lambda is required for buttons to work properly and clipboard value assigned
         col2.button("📋", on_click=lambda storyPlanValue = f"/storyplan {row['Item number']} {row['Subject']}": clipboard.copy(storyPlanValue), key=row['Item number'])
         col2.button("🔗", on_click=lambda itemLinkValue = f"{server}/browse/{row['Item number']}": clipboard.copy(itemLinkValue), key=f"{row['Item number']}_link")
-        
-if st.button('Refresh ALL Jira items', help='Clears all Cached data for all pages'):
-    st.cache_data.clear()
-    st.rerun()
+
+        st.divider()

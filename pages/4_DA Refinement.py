@@ -21,7 +21,7 @@ def typeEmoji(type):
 
 @st.cache_data(ttl=900)
 def readyForRefinementItems(_jiraConnection, project, component, server):
-    columns = ['Item number', 'Link', 'Subject', 'Assignee', 'Reporter', 'Type', 'TypeEmoji', 'Epic', 'Epic link']
+    columns = ['Item number', 'Link', 'Subject', 'Assignee', 'Reporter', 'Type', 'TypeEmoji', 'Epic', 'Epic link', 'DATA: Work type']
     df = pd.DataFrame(columns=columns)
 
     status = 'Backlog'
@@ -42,9 +42,14 @@ def readyForRefinementItems(_jiraConnection, project, component, server):
                 parentEpic = 'No Parent'
                 epicLink = ''
 
+            try:
+                dataWorkType = getattr(issue.fields, 'customfield_10366')
+            except:
+                dataWorkType = ''
+
             emoji = typeEmoji(issue.fields.issuetype)
 
-            ticket = [issue.key, issue.permalink(), issue.fields.summary, issue.fields.assignee, issue.fields.reporter, issue.fields.issuetype, emoji, parentEpic, epicLink]
+            ticket = [issue.key, issue.permalink(), issue.fields.summary, issue.fields.assignee, issue.fields.reporter, issue.fields.issuetype, emoji, parentEpic, epicLink, dataWorkType]
             df.loc[len(df)] = ticket
             
         startAt += 50
@@ -85,18 +90,22 @@ selectedComponent = "DA"
 
 refinmentItems = readyForRefinementItems(jira, projectName, selectedComponent, server)
 
+if st.button('Refresh ALL Jira items', help='Clears all Cached data for all pages'):
+    st.cache_data.clear()
+    st.rerun()
+
 for index, row in refinmentItems.iterrows():
     with st.container():
-        col1, col2 = st.columns([0.9,0.1])
+        col1, col2 = st.columns([0.95,0.05])
         if row['Epic'] == 'No Parent':
-            col1.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}<br>", unsafe_allow_html=True)
+            col1.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']} <br>Work type: {row['DATA: Work type']}", unsafe_allow_html=True)
         else:
-            col1.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}, Epic: <a href='{row['Epic link']}'>{row['Epic']}</a><br>", unsafe_allow_html=True)
+            col1.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']} <br>Work type: {row['DATA: Work type']}, Epic: <a href='{row['Epic link']}'>{row['Epic']}</a>", unsafe_allow_html=True)
         
         # approach with lambda is required for buttons to work properly and clipboard value assigned
         col2.button("📋", on_click=lambda storyPlanValue = f"/storyplan {row['Item number']} {row['Subject']}": clipboard.copy(storyPlanValue), key=row['Item number'])
         col2.button("🔗", on_click=lambda itemLinkValue = f"{server}/browse/{row['Item number']}": clipboard.copy(itemLinkValue), key=f"{row['Item number']}_link")
-        
-if st.button('Refresh ALL Jira items', help='Clears all Cached data for all pages'):
-    st.cache_data.clear()
-    st.rerun()
+
+        st.divider()
+
+
