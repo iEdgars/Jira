@@ -90,14 +90,27 @@ selectedComponent = "DA"
 
 refinmentItems = readyForRefinementItems(jira, projectName, selectedComponent, server)
 
+col1, col2 = st.columns(2)
+
 # Get unique Epics from the DataFrame
-uniqueEpics = refinmentItems['Epic'].unique().tolist()
+uniqueWorktypes = refinmentItems['DATA: Work type'].unique().tolist()
+
+#Adding possibility to remove Epics
+selectedWorktypes = col1.multiselect('Select Worktypes', uniqueWorktypes, help='Select Worktypes to display')
+selectedWorktypesDf = refinmentItems if not selectedWorktypes else refinmentItems[refinmentItems['DATA: Work type'].isin(selectedWorktypes)]
+
+# Get unique Epics from the DataFrame
+uniqueEpics = selectedWorktypesDf['Epic'].unique().tolist()
+
+#Adding possibility to remove Epics
+selectedEpics = col2.multiselect('Select Epics', uniqueEpics, help='Select Epics to display')
+selectedEpicsDf = selectedWorktypesDf if not selectedEpics else selectedWorktypesDf[selectedWorktypesDf['Epic'].isin(selectedEpics)]
 
 if st.button('Refresh ALL Jira items', help='Clears all Cached data for all pages'):
     st.cache_data.clear()
     st.rerun()
 
-for index, row in refinmentItems.iterrows():
+for index, row in selectedEpicsDf.iterrows():
     with st.container():
         col1, col2 = st.columns([0.95,0.05])
         if row['Epic'] == 'No Parent':
