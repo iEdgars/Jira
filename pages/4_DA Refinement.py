@@ -90,6 +90,9 @@ selectedComponent = "DA"
 
 refinmentItems = readyForRefinementItems(jira, projectName, selectedComponent, server)
 
+# Get unique Epics from the DataFrame
+uniqueEpics = refinmentItems['Epic'].unique().tolist()
+
 if st.button('Refresh ALL Jira items', help='Clears all Cached data for all pages'):
     st.cache_data.clear()
     st.rerun()

@@ -13,16 +13,26 @@ st.markdown("## It is really specific to my usecase and not as robust")
 
 st.markdown('**Pages I curently have:**')
 
-col1, col2 = st.columns([0.25, 0.75])
+with st.container():
+  col1, col2 = st.columns([0.25, 0.75])
 
-col1.page_link("pages/1_Blocked Stories.py", label="Blocked Stories", icon="🚧")
-col2.markdown("Contains stories with **Blocked** status that has no active **blocked by** links")
+  col1.page_link("pages/1_Blocked Stories.py", label="Blocked Stories", icon="🚧")
+  col2.markdown("Contains stories with **Blocked** status that has no active **blocked by** links")
 
-col1.page_link("pages/2_Stories to Block.py", label="Stories to block", icon="🔒")
-col2.markdown("Contains stories with **Ready** status that has active **blocked by** links")
+with st.container():
+  col1, col2 = st.columns([0.25, 0.75])
 
-col1.page_link("pages/3_DE Refinement.py", label="DE Refinement", icon="📝")
-col2.markdown("Contains DE Ready for Refinment items")
+  col1.page_link("pages/2_Stories to Block.py", label="Stories to block", icon="🔒")
+  col2.markdown("Contains stories with **Ready** status that has active **blocked by** links")
 
-col1.page_link("pages/4_DA Refinement.py", label="DA Refinement", icon="📝")
-col2.markdown("Contains DA Backlog items for Refinment")
+with st.container():
+  col1, col2 = st.columns([0.25, 0.75])
+
+  col1.page_link("pages/3_DE Refinement.py", label="DE Refinement", icon="📝")
+  col2.markdown("Contains DE Ready for Refinment items")
+
+with st.container():
+  col1, col2 = st.columns([0.25, 0.75])
+
+  col1.page_link("pages/4_DA Refinement.py", label="DA Refinement", icon="📝")
+  col2.markdown("Contains DA Backlog items for Refinment")
