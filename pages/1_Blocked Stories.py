@@ -23,7 +23,7 @@ def blockedStories(_jiraConnection, project, component, server):
     df = pd.DataFrame(columns=columns)
 
     status = 'Blocked'
-    blockingStatuses = ['Ready','Blocked','Backlog','In Progress','UAT', 'In Testing', 'Ready for Refinement']
+    blockingStatuses = ['Ready','Blocked','Backlog','In Progress','UAT', 'In Testing', 'Ready for Refinement', 'IN DEFINITION']
     nonBlockingStatuses = ['Done','Rejected']
 
     query = f'project = {project} AND component = {component} AND status = {status}'

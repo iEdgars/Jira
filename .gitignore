@@ -160,3 +160,6 @@ jiraCreds.json
 ### working files
 approachTesting.ipynb
 workingFile.ipynb
+
+### batch to run streamlit
+run.bat
