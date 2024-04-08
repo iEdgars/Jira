@@ -114,9 +114,13 @@ for index, row in selectedEpicsDf.iterrows():
     with st.container():
         col1, col2 = st.columns([0.95,0.05])
         if row['Epic'] == 'No Parent':
-            col1.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']} <br>Work type: {row['DATA: Work type']}", unsafe_allow_html=True)
+            col1.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>"
+                       f"Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']} <br>"
+                       f"Work type: {row['DATA: Work type']}", unsafe_allow_html=True)
         else:
-            col1.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']} <br>Work type: {row['DATA: Work type']}, Epic: <a href='{row['Epic link']}'>{row['Epic']}</a>", unsafe_allow_html=True)
+            col1.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>"
+                       f"Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']} <br>"
+                       f"Work type: {row['DATA: Work type']}, Epic: <a href='{row['Epic link']}'>{row['Epic']}</a>", unsafe_allow_html=True)
         
         # approach with lambda is required for buttons to work properly and clipboard value assigned
         col2.button("📋", on_click=lambda storyPlanValue = f"/storyplan {row['Item number']} {row['Subject']}": clipboard.copy(storyPlanValue), key=row['Item number'])

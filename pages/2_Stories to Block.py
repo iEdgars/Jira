@@ -73,6 +73,31 @@ def storiesToBlock(_jiraConnection, project, component, server):
 
     return df
 
+@st.cache_data(ttl=900)
+def blockedEpics(_jiraConnection, project):
+    columns = ['Item number', 'Link', 'Subject', 'Assignee', 'Reporter', 'Type', 'TypeEmoji', 'Epic', 'Epic link', 'Epic Subject', 'Status', 'Team']
+    df = pd.DataFrame(columns=columns)
+
+    status = 'Blocked'
+    query = f'project = {project} and status = {status} and type = Epic ORDER BY updated DESC, created DESC'
+
+    startAt = 0
+    issues = _jiraConnection.search_issues(query, startAt=startAt, maxResults=50)
+
+    while len(issues) > 0:
+        for issue in issues:
+            child_stories = jira.search_issues(f'"Epic Link" = {issue.key}')
+            for story in child_stories:
+                for component in story.fields.components:
+                    if str(component) in ['DA','DE']:
+                        emoji = typeEmoji(story.fields.issuetype)
+                        ticket = [story.key, story.permalink(), story.fields.summary, story.fields.assignee, story.fields.reporter, story.fields.issuetype, emoji, issue.key, issue.permalink(), issue.fields.summary, str(story.fields.status), str(component)]
+                        df.loc[len(df)] = ticket
+
+        startAt += 50
+        issues = jira.search_issues(query, startAt=startAt, maxResults=50)
+
+    return df
 
 ### adding credentials
 with open('jiraCreds.json') as jiraCredsFile:
@@ -126,9 +151,26 @@ filtered_df = excludedEpicsDf if not selectedEpics else excludedEpicsDf[excluded
 
 for index, row in filtered_df.iterrows():
     if row['Epic'] == 'No Parent':
-        st.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}", unsafe_allow_html=True)
+        st.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>"
+                 f"Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}", unsafe_allow_html=True)
     else:
-        st.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}, Epic: <a href='{row['Epic link']}'>{row['Epic']}</a>", unsafe_allow_html=True)
+        st.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>"
+                 f"Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}, "
+                 f"Epic: <a href='{row['Epic link']}'>{row['Epic']}</a>", unsafe_allow_html=True)
+
+st.divider()
+st.markdown('**Items from Blocked epics that arent marked as Blocked:**')
+
+status_list = ['Done', 'Rejected', 'Blocked'] #['Blocked', 'Ready', 'Backlog', 'Ready for refinement', 'In Progress']
+blockedEpicStories = blockedEpics(jira, projectName)
+blockedEpicStories = blockedEpicStories[(~blockedEpicStories['Status'].isin(status_list)) & (blockedEpicStories['Team'] == str(selectedComponent))]
+# blockedEpicStories = blockedEpicStories[(blockedEpicStories['Team'] == selectedComponent)]
+
+for index, row in blockedEpicStories.iterrows():
+    st.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>"
+             f"Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Status: {row['Status']}, Type: {row['Type']} {row['TypeEmoji']}, <br>"
+             f"Epic: <a href='{row['Epic link']}'>{row['Epic']}</a> <u><b>{row['Epic Subject']}</b></u>", unsafe_allow_html=True)
+
 
 if st.button('Refresh ALL Jira items', help='Clears all Cached data for all pages'):
     st.cache_data.clear()
