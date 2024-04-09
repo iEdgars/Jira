@@ -43,9 +43,12 @@ def readyForRefinementItems(_jiraConnection, project, component, server):
                 epicLink = ''
 
             try:
-                dataWorkType = getattr(issue.fields, 'customfield_10366')
+                if str(getattr(issue.fields, 'customfield_10366')) == 'None':
+                    dataWorkType = f"{getattr(issue.fields, 'customfield_10366')} "
+                else:
+                    dataWorkType = getattr(issue.fields, 'customfield_10366')
             except:
-                dataWorkType = ''
+                dataWorkType = 'No DATA Worktype'
 
             emoji = typeEmoji(issue.fields.issuetype)
 
@@ -92,18 +95,18 @@ refinmentItems = readyForRefinementItems(jira, projectName, selectedComponent, s
 
 col1, col2 = st.columns(2)
 
-# Get unique Epics from the DataFrame
+# Get unique Worktypes from the DataFrame
 uniqueWorktypes = refinmentItems['DATA: Work type'].unique().tolist()
 
-#Adding possibility to remove Epics
+#Adding possibility to filter to Epics
 selectedWorktypes = col1.multiselect('Select Worktypes', uniqueWorktypes, help='Select Worktypes to display')
 selectedWorktypesDf = refinmentItems if not selectedWorktypes else refinmentItems[refinmentItems['DATA: Work type'].isin(selectedWorktypes)]
 
 # Get unique Epics from the DataFrame
 uniqueEpics = selectedWorktypesDf['Epic'].unique().tolist()
 
-#Adding possibility to remove Epics
-selectedEpics = col2.multiselect('Select Epics', uniqueEpics, help='Select Epics to display')
+#Adding possibility to filter to Epics
+selectedEpics = col2.multiselect('Select Epics', uniqueEpics, default=[], help='Select Epics to display')
 selectedEpicsDf = selectedWorktypesDf if not selectedEpics else selectedWorktypesDf[selectedWorktypesDf['Epic'].isin(selectedEpics)]
 
 if st.button('Refresh ALL Jira items', help='Clears all Cached data for all pages'):
