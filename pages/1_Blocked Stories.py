@@ -19,11 +19,11 @@ def typeEmoji(type):
 
 @st.cache_data(ttl=900)
 def blockedStories(_jiraConnection, project, component, server):
-    columns = ['Item number', 'Link', 'Subject', 'Assignee', 'Reporter', 'Type', 'TypeEmoji', 'Epic', 'Epic link']
+    columns = ['Item number', 'Link', 'Subject', 'Assignee', 'Reporter', 'Type', 'TypeEmoji', 'Epic', 'Epic link', 'Epic Status']
     df = pd.DataFrame(columns=columns)
 
     status = 'Blocked'
-    blockingStatuses = ['Ready','Blocked','Backlog','In Progress','UAT', 'In Testing', 'Ready for Refinement', 'IN DEFINITION']
+    blockingStatuses = ['Ready','Blocked','Backlog','In Progress','UAT', 'In Testing', 'Ready for Refinement', 'IN DEFINITION', 'Technical Review']
     nonBlockingStatuses = ['Done','Rejected']
 
     query = f'project = {project} AND component = {component} AND status = {status}'
@@ -54,22 +54,24 @@ def blockedStories(_jiraConnection, project, component, server):
         
         try:
             parentEpic = item.fields.parent
+            parentStatus = str(parentEpic.fields.status)
             epicLink = f'{server}/browse/{str(item.fields.parent)}'
         except:
             parentEpic = 'No Parent'
-            epicLink = ''
+            parentStatus = None
+            epicLink = None
 
         emoji = typeEmoji(item.fields.issuetype)
 
         if len(activeBlockers) == 0:
 
-            ticket = [item.key, item.permalink(), item.fields.summary, item.fields.assignee, item.fields.reporter, item.fields.issuetype, emoji, parentEpic, epicLink]
+            ticket = [item.key, item.permalink(), item.fields.summary, item.fields.assignee, item.fields.reporter, item.fields.issuetype, emoji, parentEpic, epicLink, parentStatus]
             df.loc[len(df)] = ticket
         
         else:
             pass
     
-    df = df.drop_duplicates()    
+    df = df.drop_duplicates()
 
     return df
 
@@ -105,6 +107,7 @@ st.title('Blocked items without active blockers', help="Stories with **Blocked**
 selectedComponent = st.selectbox('Select team', [board for boards in jiraInfo['boards'] for board in boards], help='Select jira Component to determine team')
 
 blockedJira = blockedStories(jira, projectName, selectedComponent, server)
+blockedJira = blockedJira.loc[blockedJira['Epic Status'] != 'Blocked']
 
 col1, col2 = st.columns(2)
 
@@ -131,7 +134,7 @@ for index, row in filtered_df.iterrows():
     else:
         st.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>"
                  f"Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}, "
-                 f"Epic: <a href='{row['Epic link']}'>{row['Epic']}</a>", unsafe_allow_html=True)
+                 f"Epic: <a href='{row['Epic link']}'>{row['Epic']}</a>, Epic Status: {row['Epic Status']}", unsafe_allow_html=True)
 
 if st.button('Refresh ALL Jira items', help='Clears all Cached data for all pages'):
     st.cache_data.clear()
