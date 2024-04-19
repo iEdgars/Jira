@@ -83,7 +83,7 @@ with open('jiraCreds.json') as jiraCredsFile:
 
 email = jiraCreds['email']
 apiToken = jiraCreds['apiToken']
-encodedToken = jiraCreds['encodedToken']
+# encodedToken = jiraCreds['encodedToken']
 
 ### adding Jira info
 with open('jiraInfo.json') as jiraInfoFile:
