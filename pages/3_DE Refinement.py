@@ -18,10 +18,10 @@ def typeEmoji(type):
 
     return emoji
 
-
-@st.cache_data(ttl=900)
+cacheTime = 900
+@st.cache_data(ttl=cacheTime)
 def readyForRefinementItems(_jiraConnection, project, component, server):
-    columns = ['Item number', 'Link', 'Subject', 'Assignee', 'Reporter', 'Type', 'TypeEmoji', 'Epic', 'Epic link']
+    columns = ['Item number', 'Link', 'Subject', 'Assignee', 'Reporter', 'Type', 'Priority', 'TypeEmoji', 'Epic', 'Epic link']
     df = pd.DataFrame(columns=columns)
 
     status = 'Ready for Refinement'
@@ -44,13 +44,15 @@ def readyForRefinementItems(_jiraConnection, project, component, server):
 
             emoji = typeEmoji(issue.fields.issuetype)
 
-            ticket = [issue.key, issue.permalink(), issue.fields.summary, issue.fields.assignee, issue.fields.reporter, issue.fields.issuetype, emoji, parentEpic, epicLink]
+            ticket = [issue.key, issue.permalink(), issue.fields.summary, issue.fields.assignee, issue.fields.reporter, 
+                      issue.fields.issuetype, str(issue.fields.priority)[:2], emoji, parentEpic, epicLink]
             df.loc[len(df)] = ticket
             
         startAt += 50
         issues = _jiraConnection.search_issues(query, startAt=startAt, maxResults=50)
 
     return df
+
 
 ### adding credentials
 with open('jiraCreds.json') as jiraCredsFile:
@@ -85,9 +87,14 @@ selectedComponent = "DE"
 
 refinmentItems = readyForRefinementItems(jira, projectName, selectedComponent, server)
         
-if st.button('Refresh ALL Jira items', help='Clears all Cached data for all pages'):
+if st.button('Refresh ALL Jira items', help=f'Clears all Cached data for all pages. Cache is set to {int(cacheTime/60)}min'):
     st.cache_data.clear()
     st.rerun()
+
+if st.toggle('**Critical and High priority items only**'):
+    refinmentItems = refinmentItems[refinmentItems['Priority'].isin(['P1', 'P2'])]
+
+st.write('')
 
 for index, row in refinmentItems.iterrows():
     with st.container():
@@ -95,10 +102,10 @@ for index, row in refinmentItems.iterrows():
         # col1, col2, col3 = st.columns([0.87,0.065,0.065])
         if row['Epic'] == 'No Parent':
             col1.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>"
-                       f"Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}<br>", unsafe_allow_html=True)
+                       f"Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}, Priority: {row['Priority']}<br>", unsafe_allow_html=True)
         else:
             col1.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>"
-                       f"Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}, "
+                       f"Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}, Priority: {row['Priority']}"
                        f"Epic: <a href='{row['Epic link']}'>{row['Epic']}</a><br>", unsafe_allow_html=True)
         
         # approach with lambda is required for buttons to work properly and clipboard value assigned

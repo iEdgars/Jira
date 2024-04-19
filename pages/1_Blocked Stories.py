@@ -17,7 +17,8 @@ def typeEmoji(type):
 
     return emoji
 
-@st.cache_data(ttl=900)
+cacheTime = 900
+@st.cache_data(ttl=cacheTime)
 def blockedStories(_jiraConnection, project, component, server):
     columns = ['Item number', 'Link', 'Subject', 'Assignee', 'Reporter', 'Type', 'TypeEmoji', 'Epic', 'Epic link', 'Epic Status']
     df = pd.DataFrame(columns=columns)
@@ -136,6 +137,6 @@ for index, row in filtered_df.iterrows():
                  f"Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}, "
                  f"Epic: <a href='{row['Epic link']}'>{row['Epic']}</a>, Epic Status: {row['Epic Status']}", unsafe_allow_html=True)
 
-if st.button('Refresh ALL Jira items', help='Clears all Cached data for all pages'):
+if st.button('Refresh ALL Jira items', help=f'Clears all Cached data for all pages. Cache is set to {int(cacheTime/60)}min'):
     st.cache_data.clear()
     st.rerun()

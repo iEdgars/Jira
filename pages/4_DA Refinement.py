@@ -18,8 +18,8 @@ def typeEmoji(type):
 
     return emoji
 
-
-@st.cache_data(ttl=900)
+cacheTime = 900
+@st.cache_data(ttl=cacheTime)
 def readyForRefinementItems(_jiraConnection, project, component, server):
     columns = ['Item number', 'Link', 'Subject', 'Assignee', 'Reporter', 'Type', 'TypeEmoji', 'Epic', 'Epic link', 'DATA: Work type']
     df = pd.DataFrame(columns=columns)
@@ -109,7 +109,7 @@ uniqueEpics = selectedWorktypesDf['Epic'].unique().tolist()
 selectedEpics = col2.multiselect('Select Epics', uniqueEpics, default=[], help='Select Epics to display')
 selectedEpicsDf = selectedWorktypesDf if not selectedEpics else selectedWorktypesDf[selectedWorktypesDf['Epic'].isin(selectedEpics)]
 
-if st.button('Refresh ALL Jira items', help='Clears all Cached data for all pages'):
+if st.button('Refresh ALL Jira items', help=f'Clears all Cached data for all pages. Cache is set to {int(cacheTime/60)}min'):
     st.cache_data.clear()
     st.rerun()
 

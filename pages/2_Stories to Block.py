@@ -17,7 +17,8 @@ def typeEmoji(type):
 
     return emoji
 
-@st.cache_data(ttl=900)
+cacheTime = 900
+@st.cache_data(ttl=cacheTime)
 def storiesToBlock(_jiraConnection, project, component, server):
     columns = ['Item number', 'Link', 'Subject', 'Assignee', 'Reporter', 'Type', 'TypeEmoji', 'Epic', 'Epic link']
     df = pd.DataFrame(columns=columns)
@@ -171,6 +172,6 @@ if len(blockedEpicStories) > 0:
                 f"Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Status: {row['Status']}, Type: {row['Type']} {row['TypeEmoji']}, <br>"
                 f"Epic: <a href='{row['Epic link']}'>{row['Epic']}</a> <u><b>{row['Epic Subject']}</b></u>", unsafe_allow_html=True)
 
-if st.button('Refresh ALL Jira items', help='Clears all Cached data for all pages'):
+if st.button('Refresh ALL Jira items', help=f'Clears all Cached data for all pages. Cache is set to {int(cacheTime/60)}min'):
     st.cache_data.clear()
     st.rerun()
