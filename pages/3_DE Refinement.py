@@ -3,6 +3,7 @@ import clipboard
 from jira import JIRA
 import pandas as pd
 import json
+import os
 
 #Check for dotenv. To be removed later
 try:
@@ -64,12 +65,8 @@ def readyForRefinementItems(_jiraConnection, project, component, server):
 
 
 ### adding credentials
-with open('jiraCreds.json') as jiraCredsFile:
-    jiraCreds = json.load(jiraCredsFile)
-
-email = jiraCreds['email']
-apiToken = jiraCreds['apiToken']
-# encodedToken = jiraCreds['encodedToken']
+email = os.getenv("email")
+apiToken = os.getenv("apiToken")
 
 ### adding Jira info
 with open('jiraInfo.json') as jiraInfoFile:
