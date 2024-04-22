@@ -7,6 +7,21 @@ st.set_page_config(
 #   layout="wide"
 )
 
+#migration from cred's in json to .env:
+import os
+if not os.path.exists('.env'):
+  import migrate2dotenv
+  migrate2dotenv.migrateCreds()
+
+#Check for dotenv. To be removed later
+try:
+  from dotenv import load_dotenv
+except ModuleNotFoundError:
+  st.error("⚠️ **Install python-dotenv package**")
+  st.code("pip install python-dotenv")
+  st.stop()
+
+
 st.title("This app help's with some items that are harder to get from Jira")
 
 st.markdown("## It is really specific to my usecase and not as robust")

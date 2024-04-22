@@ -4,6 +4,15 @@ from jira import JIRA
 import pandas as pd
 import json
 
+#Check for dotenv. To be removed later
+try:
+  from dotenv import load_dotenv
+  load_dotenv()
+except ModuleNotFoundError:
+  st.error("⚠️ **Install python-dotenv package**")
+  st.code("pip install python-dotenv")
+  st.stop()
+
 def typeEmoji(type):
     if str(type) == 'Story':
         emoji = '📝'
