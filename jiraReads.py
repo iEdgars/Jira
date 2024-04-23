@@ -159,45 +159,10 @@ def blockedEpics(_jiraConnection, project):
     return df
 
 @st.cache_data(ttl=cacheTime)
-def readyForRefinementItemsDE(_jiraConnection, project, component, server):
-    columns = ['Item number', 'Link', 'Subject', 'Assignee', 'Reporter', 'Type', 'Priority', 'TypeEmoji', 'Epic', 'Epic link']
+def readyForRefinementItems(_jiraConnection, project, component, server, status):
+    columns = ['Item number', 'Link', 'Subject', 'Assignee', 'Reporter', 'Type', 'Priority', 'TypeEmoji', 'Epic', 'Epic link', 'DATA: Work type']
     df = pd.DataFrame(columns=columns)
 
-    status = 'Ready for Refinement'
-    # query = f'project = {project} AND component = {component} AND status = "{status}" AND type in (Bug, Story) ORDER BY cf[10011] ASC'
-    query = f'project = {project} AND component = {component} AND status = "{status}" AND type NOT IN (Epic) ORDER BY cf[10011] ASC'
-
-    startAt = 0
-    issues = _jiraConnection.search_issues(query, startAt=startAt, maxResults=50)
-
-    while len(issues) > 0:
-    # while startAt < 100:
-        for issue in issues:
-
-            try:
-                parentEpic = issue.fields.parent
-                epicLink = f'{server}/browse/{str(issue.fields.parent)}'
-            except:
-                parentEpic = 'No Parent'
-                epicLink = ''
-
-            emoji = typeEmoji(issue.fields.issuetype)
-
-            ticket = [issue.key, issue.permalink(), issue.fields.summary, issue.fields.assignee, issue.fields.reporter, 
-                      issue.fields.issuetype, str(issue.fields.priority)[:2], emoji, parentEpic, epicLink]
-            df.loc[len(df)] = ticket
-            
-        startAt += 50
-        issues = _jiraConnection.search_issues(query, startAt=startAt, maxResults=50)
-
-    return df
-
-@st.cache_data(ttl=cacheTime)
-def readyForRefinementItemsDA(_jiraConnection, project, component, server):
-    columns = ['Item number', 'Link', 'Subject', 'Assignee', 'Reporter', 'Type', 'TypeEmoji', 'Epic', 'Epic link', 'DATA: Work type']
-    df = pd.DataFrame(columns=columns)
-
-    status = 'Backlog'
     # query = f'project = {project} AND component = {component} AND status = "{status}" AND type in (Bug, Story) ORDER BY cf[10011] ASC'
     query = f'project = {project} AND component = {component} AND status = "{status}" AND type NOT IN (Epic) ORDER BY cf[10011] ASC'
 
@@ -225,7 +190,8 @@ def readyForRefinementItemsDA(_jiraConnection, project, component, server):
 
             emoji = typeEmoji(issue.fields.issuetype)
 
-            ticket = [issue.key, issue.permalink(), issue.fields.summary, issue.fields.assignee, issue.fields.reporter, issue.fields.issuetype, emoji, parentEpic, epicLink, dataWorkType]
+            ticket = [issue.key, issue.permalink(), issue.fields.summary, issue.fields.assignee, issue.fields.reporter, 
+                      issue.fields.issuetype, str(issue.fields.priority)[:2], emoji, parentEpic, epicLink, dataWorkType]
             df.loc[len(df)] = ticket
             
         startAt += 50

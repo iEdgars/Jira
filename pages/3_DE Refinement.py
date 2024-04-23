@@ -43,7 +43,8 @@ st.title('DE Ready for Refinment items', help="DE Ready for Refinment items with
 # selectedComponent = st.selectbox('Select team', [board for boards in jiraInfo['boards'] for board in boards], help='Select Jira Component to determine team')
 selectedComponent = "DE"
 
-refinmentItems = jiraReads.readyForRefinementItemsDE(jira, projectName, selectedComponent, server)
+# refinmentItems = jiraReads.readyForRefinementItemsDE(jira, projectName, selectedComponent, server)
+refinmentItems = jiraReads.readyForRefinementItems(jira, projectName, selectedComponent, server, 'Ready for Refinement')
         
 if st.button('Refresh ALL Jira items', help=f'Clears all Cached data for all pages. Cache is set to {int(jiraReads.cacheTime/60)}min'):
     st.cache_data.clear()
@@ -64,7 +65,7 @@ for index, row in refinmentItems.iterrows():
         else:
             col1.write(f"<a href='{row['Link']}'>{row['Item number']}</a> <b>{row['Subject']}</b> <br>"
                        f"Assignee: {row['Assignee']}, Reporter: {row['Reporter']}, Type: {row['Type']} {row['TypeEmoji']}, Priority: {row['Priority']}"
-                       f"Epic: <a href='{row['Epic link']}'>{row['Epic']}</a><br>", unsafe_allow_html=True)
+                       f" Epic: <a href='{row['Epic link']}'>{row['Epic']}</a><br>", unsafe_allow_html=True)
         
         # approach with lambda is required for buttons to work properly and clipboard value assigned
         col2.button("📋", on_click=lambda storyPlanValue = f"/storyplan {row['Item number']} {row['Subject']}": clipboard.copy(storyPlanValue), key=row['Item number'])

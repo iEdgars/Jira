@@ -43,7 +43,8 @@ st.title('DA Refinment items', help="DA Backlog items with buttons to copy /stor
 # selectedComponent = st.selectbox('Select team', [board for boards in jiraInfo['boards'] for board in boards], help='Select Jira Component to determine team')
 selectedComponent = "DA"
 
-refinmentItems = jiraReads.readyForRefinementItemsDA(jira, projectName, selectedComponent, server)
+# refinmentItems = jiraReads.readyForRefinementItemsDA(jira, projectName, selectedComponent, server)
+refinmentItems = jiraReads.readyForRefinementItems(jira, projectName, selectedComponent, server, 'Backlog')
 
 col1, col2 = st.columns(2)
 
