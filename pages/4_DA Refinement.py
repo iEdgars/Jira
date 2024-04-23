@@ -4,6 +4,7 @@ from jira import JIRA
 import pandas as pd
 import json
 import os
+import jiraReads #py file
 
 #Check for dotenv. To be removed later
 try:
@@ -14,61 +15,6 @@ except ModuleNotFoundError:
   st.code("pip install python-dotenv")
   st.stop()
 
-def typeEmoji(type):
-    if str(type) == 'Story':
-        emoji = '📝'
-    elif str(type) == 'Bug':
-        emoji = '🐛'
-    elif str(type) == 'Spike':
-        emoji = '❗📌❗' #'🌵'
-    elif str(type) == 'Epic':
-        emoji = '🚀'
-    else:
-        emoji = ''
-
-    return emoji
-
-cacheTime = 900
-@st.cache_data(ttl=cacheTime)
-def readyForRefinementItems(_jiraConnection, project, component, server):
-    columns = ['Item number', 'Link', 'Subject', 'Assignee', 'Reporter', 'Type', 'TypeEmoji', 'Epic', 'Epic link', 'DATA: Work type']
-    df = pd.DataFrame(columns=columns)
-
-    status = 'Backlog'
-    # query = f'project = {project} AND component = {component} AND status = "{status}" AND type in (Bug, Story) ORDER BY cf[10011] ASC'
-    query = f'project = {project} AND component = {component} AND status = "{status}" AND type NOT IN (Epic) ORDER BY cf[10011] ASC'
-
-    startAt = 0
-    issues = _jiraConnection.search_issues(query, startAt=startAt, maxResults=50)
-
-    while len(issues) > 0:
-    # while startAt < 100:
-        for issue in issues:
-
-            try:
-                parentEpic = issue.fields.parent
-                epicLink = f'{server}/browse/{str(issue.fields.parent)}'
-            except:
-                parentEpic = 'No Parent'
-                epicLink = ''
-
-            try:
-                if str(getattr(issue.fields, 'customfield_10366')) == 'None':
-                    dataWorkType = f"{getattr(issue.fields, 'customfield_10366')} "
-                else:
-                    dataWorkType = getattr(issue.fields, 'customfield_10366')
-            except:
-                dataWorkType = 'No DATA Worktype'
-
-            emoji = typeEmoji(issue.fields.issuetype)
-
-            ticket = [issue.key, issue.permalink(), issue.fields.summary, issue.fields.assignee, issue.fields.reporter, issue.fields.issuetype, emoji, parentEpic, epicLink, dataWorkType]
-            df.loc[len(df)] = ticket
-            
-        startAt += 50
-        issues = _jiraConnection.search_issues(query, startAt=startAt, maxResults=50)
-
-    return df
 
 ### adding credentials
 email = os.getenv("email")
@@ -97,7 +43,7 @@ st.title('DA Refinment items', help="DA Backlog items with buttons to copy /stor
 # selectedComponent = st.selectbox('Select team', [board for boards in jiraInfo['boards'] for board in boards], help='Select Jira Component to determine team')
 selectedComponent = "DA"
 
-refinmentItems = readyForRefinementItems(jira, projectName, selectedComponent, server)
+refinmentItems = jiraReads.readyForRefinementItemsDA(jira, projectName, selectedComponent, server)
 
 col1, col2 = st.columns(2)
 
@@ -115,7 +61,7 @@ uniqueEpics = selectedWorktypesDf['Epic'].unique().tolist()
 selectedEpics = col2.multiselect('Select Epics', uniqueEpics, default=[], help='Select Epics to display')
 selectedEpicsDf = selectedWorktypesDf if not selectedEpics else selectedWorktypesDf[selectedWorktypesDf['Epic'].isin(selectedEpics)]
 
-if st.button('Refresh ALL Jira items', help=f'Clears all Cached data for all pages. Cache is set to {int(cacheTime/60)}min'):
+if st.button('Refresh ALL Jira items', help=f'Clears all Cached data for all pages. Cache is set to {int(jiraReads.cacheTime/60)}min'):
     st.cache_data.clear()
     st.rerun()
 
