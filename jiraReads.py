@@ -48,7 +48,8 @@ def blockedStories(_jiraConnection, project, component, server):
         activeBlockers = []
         for bi in blockedIssues:
             if hasattr(bi, 'inwardIssue'):
-                if bi.inwardIssue.fields.status.name in blockingStatuses:
+                # if bi.inwardIssue.fields.status.name in blockingStatuses:
+                if bi.inwardIssue.fields.status.name not in nonBlockingStatuses:
                     activeBlockers.append(f'{bi.inwardIssue.key} [{bi.inwardIssue.fields.status}]')
                     # print(f'Blocked By: {bi.inwardIssue.key}, {bi.inwardIssue.fields.status}')
         
